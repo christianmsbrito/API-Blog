@@ -1,0 +1,1 @@
+const dictionary = require('./query.dictionary');
