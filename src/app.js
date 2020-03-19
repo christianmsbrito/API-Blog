@@ -14,7 +14,7 @@ class AppController {
     }
 
     middlewares() {
-        if (this.envx !== 'PRODUCTION') {
+        if (this.env !== 'PRODUCTION') {
             this.koa.use(morgan('dev'));
         }
 
