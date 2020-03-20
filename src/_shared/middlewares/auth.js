@@ -1,21 +1,24 @@
 const jwt = require('jsonwebtoken');
 const { onUnathorized } = require('../handlers/index');
 
-module.exports = (ctx, next) => {
-    const isPublicRoute = /\/login$|\/signup$/.test(ctx.request.url);
-    
-    if(isPublicRoute) {
-        return next();
-    }
+module.exports = async (ctx, next) => {
+    try {
+        const isPublicRoute = /\/login$|\/signup$/.test(ctx.request.url);
 
-    const { authorization } = ctx.request.header;
+        if (isPublicRoute) {
+            return next();
+        }
 
-    const token = authorization.replace('Bearer ', '');
+        const { authorization } = ctx.request.header;
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if(err) return onUnathorized(ctx, 'Invalid token!');        
+        const token = authorization.replace('Bearer ', '');
+
+        const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+
         ctx.userId = decoded.id;
-    });
 
-    return next();
+        return next();
+    } catch (err) {
+        return onUnathorized(ctx, err.message);
+    }
 }
