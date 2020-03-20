@@ -11,7 +11,7 @@ class Controller {
 
             onCreated(ctx, created);
         } catch (err) {
-            onError(ctx, err);
+            onError(ctx, err.message);
         }
     }
 
@@ -24,7 +24,7 @@ class Controller {
 
             onSuccess(ctx, created);
         } catch (err) {
-            onError(ctx, err);
+            onError(ctx, err.message);
         }
     }
 
@@ -32,11 +32,11 @@ class Controller {
         try {
             const { query } = ctx.request;
 
-            const users = await commentService.list(query);
+            const comments = await commentService.list(query);
 
-            onSuccess(ctx, users);
+            onSuccess(ctx, comments);
         } catch (err) {
-            onError(ctx, err);
+            onError(ctx, err.message);
         }
     }
 
@@ -44,11 +44,11 @@ class Controller {
         try {
             const { id } = ctx.params;
 
-            const user = await commentService.getById(id);
+            const comment = await commentService.getById(id);
 
-            onSuccess(ctx, user);
+            onSuccess(ctx, comment);
         } catch (err) {
-            onError(ctx, err);
+            onError(ctx, err.message);
         }
     }
 
@@ -60,7 +60,7 @@ class Controller {
 
             onDeleted(ctx);
         } catch (err) {
-            onError(ctx, err);
+            onError(ctx, err.message);
         }
     }
 }

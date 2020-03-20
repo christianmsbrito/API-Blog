@@ -3,7 +3,6 @@ const { Post } = require('../models/post.model');
 
 class Controller {
     async create(payload) {
-        console.log(payload);
         return Post.create(payload);
     }
 
