@@ -6,7 +6,7 @@ const db = require('./_shared/database/database.connector');
 
 db.connect();
 
-const App = require('./app')(process.env.ENVIRONMENT);
+const App = require('./app');
 
 const listenPort = process.env.PORT || 3777;
 

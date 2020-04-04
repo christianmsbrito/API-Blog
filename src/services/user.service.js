@@ -1,4 +1,5 @@
-const mongoose = require('mongoose')
+const paginator = require('../_shared/query/query-pagination.helper');
+const dateFilter = require('../_shared/query/query-date.helper');
 const { User } = require('../models/user.model');
 const bcrypt = require('bcryptjs');
 
@@ -9,32 +10,46 @@ class Controller {
     }
 
     async update(id, payload) {
-        return User.updateOne(mongoose.mongo.ObjectId(id), payload);
+        return User.updateOne({ _id: id }, payload);
     }
 
-    async list(condition, pagination) {
-        return User.find(condition)
-                   .skip(pagination.skip)
-                   .limit(pagination.limit)
-                   .select('-password');
+    async list(query) {
+        const filters = { ...dateFilter(query) };
+
+        if (query.name && query.name.length >= 4) {
+            filters.name = new RegExp(`.*${query.name}.*`, 'i')
+        }
+
+        if (query.email) {
+            filters.email = {
+                $eq: query.email
+            }
+        }
+
+        const { skip, limit } = paginator(query);
+
+        return User.find(query)
+            .skip(skip)
+            .limit(limit)
+            .select('-password');
     }
 
-    async findOne(condition) {
-        return User.findOne(condition)
-                   .select('-password');
+    async findOne(query) {
+        return User.findOne(query)
+            .select('-password');
     }
 
-    async getLoginData(condition) {
-        return User.findOne(condition);
+    async getLoginData(query) {
+        return User.findOne(query);
     }
 
     async getById(id) {
-        return User.findOne({ _id: mongoose.Types.ObjectId(id) })
-                   .select('-password');
+        return User.findOne({ _id: id })
+            .select('-password');
     }
 
     async remove(id) {
-        return User.delete({ _id: mongoose.mongo.ObjectId(id) });
+        return User.delete({ _id: id });
     }
 }
 

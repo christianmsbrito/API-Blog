@@ -5,8 +5,7 @@ const morgan = require('koa-morgan');
 const routes = require('./routes/index.route');
 
 class AppController {
-    constructor(env) {
-        this.env = env;
+    constructor() {
         this.koa = new Koa();
 
         this.middlewares();
@@ -14,17 +13,15 @@ class AppController {
     }
 
     middlewares() {
-        if (this.env !== 'PRODUCTION') {
-            this.koa.use(morgan('dev'));
-        }
+        this.koa.use(morgan('dev'));
 
         this.koa.use(cors());
         this.koa.use(bodyParser({ extended: false }));
     }
 
-    routes () {
+    routes() {
         routes.load(this.koa);
     }
 }
 
-module.exports = env => new AppController(env).koa;
+module.exports = new AppController().koa;

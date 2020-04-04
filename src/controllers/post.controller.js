@@ -1,9 +1,6 @@
-const dateFilter = require('../_shared/query-date.helper');
-
-const { onSuccess, onCreated, onDeleted, onError, onUnathorized } = require('../_shared/handlers/index');
+const { onSuccess, onCreated, onDeleted, onError, onUnathorized, onNotFound } = require('../_shared/handlers/index');
 
 const postService = require('../services/post.service');
-const commentService = require('../services/comment.service');
 
 class Controller {
     async create(ctx) {
@@ -24,6 +21,12 @@ class Controller {
             const { id } = ctx.params;
             const { body } = ctx.request;
 
+            const post = await postService.getById(id);
+
+            if(post.author !== ctx.userId) {
+                return onUnathorized(ctx, 'Only the post original author can update the post!');
+            }
+
             const created = await postService.update(id, body);
 
             onSuccess(ctx, created);
@@ -37,26 +40,7 @@ class Controller {
         try {
             const { query } = ctx.request;
 
-            const filters = { ...dateFilter(query) };
-
-            if (query.title && query.title.length >= 4) {
-                filters.title = {
-                    $regex: new RegExp(`.*${query.title}.*`, 'gi')
-                }
-            }
-
-            if (query.tags) {
-                filters.tags = {
-                    $in: query.tags.split(',')
-                }
-            }
-
-            const pagination = {
-                skip: Number(query.skip) || 0,
-                limit: Number(query.limit) || 20
-            }
-
-            const posts = await postService.list(filters, pagination);
+            const posts = await postService.list(query, pagination);
 
             onSuccess(ctx, posts);
         } catch (err) {
@@ -70,12 +54,7 @@ class Controller {
             const { query } = ctx.request;
             const { id } = ctx.params;
 
-            const pagination = {
-                skip: Number(query.skip) || 0,
-                limit: Number(query.limit) || 20
-            }
-
-            const comments = await commentService.list({ post: id }, pagination);
+            const comments = await postService.listComments(id, query);
 
             onSuccess(ctx, comments);
         } catch (err) {
@@ -88,9 +67,13 @@ class Controller {
         try {
             const { id } = ctx.params;
 
-            const user = await postService.getById(id);
+            const post = await postService.getById(id);
 
-            onSuccess(ctx, user);
+            if(!post) {
+                return onNotFound(ctx, 'The post you are looking for does not exists or was removed by author!');
+            }
+
+            onSuccess(ctx, post);
         } catch (err) {
             console.log(err.stack);
             onError(ctx, err.message);

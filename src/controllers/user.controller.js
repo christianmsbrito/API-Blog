@@ -1,10 +1,7 @@
-const dateFilter = require('../_shared/query-date.helper');
-
 const { onSuccess, onCreated, onDeleted, onError, onUnathorized } = require('../_shared/handlers/index');
 
 const userService = require('../services/user.service');
 const postService = require('../services/post.service');
-const commentsService = require('../services/comment.service');
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -38,7 +35,7 @@ class Controller {
             onSuccess(ctx, {
                 type: 'Bearer',
                 token,
-                expiresIn: 86400    
+                expiresIn: 86400
             });
         } catch (err) {
             onError(ctx, err);
@@ -63,48 +60,39 @@ class Controller {
             const { id } = ctx.params;
             const { body } = ctx.request;
 
-            const created = await userService.update(id, body);
+            await userService.update(id, body);
 
-            onSuccess(ctx, created);
+            onSuccess(ctx, body);
         } catch (err) {
             onError(ctx, err);
         }
     }
 
-    async list(ctx) {
-        try {
-            const { query } = ctx.request;
+    // async list(ctx) {
+    //     try {
+    //         const { query } = ctx.request;
 
-            const filters = { ...dateFilter(query) };
+    //         const users = await userService.list(query);
 
-            if (query.name && query.name.length >= 4) {
-                filters.name = new RegExp(`.*${query.name}.*`, 'i')
-            }
-
-            if (query.email) {
-                filters.email = {
-                    $eq: query.email
-                }
-            }
-
-            const pagination = {
-                skip: Number(query.skip) || 0,
-                limit: Number(query.limit) || 20
-            }
-
-            const users = await userService.list(filters, pagination);
-
-            onSuccess(ctx, users);
-        } catch (err) {
-            onError(ctx, err);
-        }
-    }
+    //         onSuccess(ctx, users);
+    //     } catch (err) {
+    //         onError(ctx, err);
+    //     }
+    // }
 
     async getById(ctx) {
         try {
             const { id } = ctx.params;
 
+            if (id !== ctx.userId) {
+                return onUnathorized(ctx, 'You can only delete your own account');
+            }
+
             const user = await userService.getById(id);
+
+            if (!user) {
+
+            }
 
             onSuccess(ctx, user);
         } catch (err) {
